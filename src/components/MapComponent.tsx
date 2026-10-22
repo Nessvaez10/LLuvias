@@ -47,7 +47,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'critical_high' | 'with_incidents'>('all');
   const [showCriticalMarkers, setShowCriticalMarkers] = useState<boolean>(true);
-  const [activeBasemap, setActiveBasemap] = useState<'carto' | 'osm' | 'satellite'>('carto');
+  const [activeBasemap, setActiveBasemap] = useState<'osm' | 'topo' | 'satellite'>('osm');
 
   // Map of normalized name to summary
   const summaryByNormalizedName = useMemo(() => {
@@ -91,10 +91,9 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       maxZoom: 16,
     });
 
-    // Basemaps
-    const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      subdomains: 'abcd',
+    // Basemaps: OpenStreetMap (libre, sin marcas de agua de API Key)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19
     }).addTo(map);
 
@@ -118,15 +117,15 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       }
     });
 
-    let newUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    let attribution = '&copy; OpenStreetMap &copy; CARTO';
+    let newUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let attribution = '&copy; OpenStreetMap contributors';
 
-    if (activeBasemap === 'osm') {
-      newUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-      attribution = '&copy; OpenStreetMap contributors';
+    if (activeBasemap === 'topo') {
+      newUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
+      attribution = 'Tiles &copy; Esri, USGS';
     } else if (activeBasemap === 'satellite') {
       newUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      attribution = 'Tiles &copy; Esri';
+      attribution = 'Tiles &copy; Esri, Maxar';
     }
 
     L.tileLayer(newUrl, { attribution, maxZoom: 19 }).addTo(map);
@@ -542,26 +541,29 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       <div className="absolute bottom-4 right-4 z-[1000] pointer-events-auto bg-white/95 backdrop-blur-md rounded-lg p-1.5 shadow-lg border border-slate-300/80 flex items-center gap-1 text-xs font-medium">
         <span className="text-[10px] text-slate-400 font-semibold px-1">Mapa Base:</span>
         <button
-          onClick={() => setActiveBasemap('carto')}
-          className={`px-2 py-1 rounded text-[11px] cursor-pointer transition-colors ${
-            activeBasemap === 'carto' ? 'bg-[#691C32] text-white' : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          Claro
-        </button>
-        <button
           onClick={() => setActiveBasemap('osm')}
           className={`px-2 py-1 rounded text-[11px] cursor-pointer transition-colors ${
             activeBasemap === 'osm' ? 'bg-[#691C32] text-white' : 'text-slate-600 hover:bg-slate-100'
           }`}
+          title="OpenStreetMap oficial libre"
         >
-          OSM
+          Calles (OSM)
+        </button>
+        <button
+          onClick={() => setActiveBasemap('topo')}
+          className={`px-2 py-1 rounded text-[11px] cursor-pointer transition-colors ${
+            activeBasemap === 'topo' ? 'bg-[#691C32] text-white' : 'text-slate-600 hover:bg-slate-100'
+          }`}
+          title="Mapa topográfico y de relieve sin marcas de agua"
+        >
+          Topográfico
         </button>
         <button
           onClick={() => setActiveBasemap('satellite')}
           className={`px-2 py-1 rounded text-[11px] cursor-pointer transition-colors ${
             activeBasemap === 'satellite' ? 'bg-[#691C32] text-white' : 'text-slate-600 hover:bg-slate-100'
           }`}
+          title="Imágenes satelitales Esri"
         >
           Satélite
         </button>

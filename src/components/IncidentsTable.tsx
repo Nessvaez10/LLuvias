@@ -9,7 +9,10 @@ import {
   MapPin, 
   CheckCircle2, 
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  Upload,
+  PlusCircle,
+  Trash2
 } from 'lucide-react';
 
 interface IncidentsTableProps {
@@ -17,6 +20,10 @@ interface IncidentsTableProps {
   municipalities: MunicipalitySummary[];
   onSelectMunicipality: (municipality: MunicipalitySummary) => void;
   initialCategoryFilter?: AffectationCategory | 'all';
+  onOpenImportCsv?: () => void;
+  onOpenAddIncident?: () => void;
+  onUpdateIncidentStatus?: (incidentId: string, newStatus: StatusCategory) => void;
+  onDeleteIncident?: (incidentId: string) => void;
 }
 
 export const IncidentsTable: React.FC<IncidentsTableProps> = ({
@@ -24,6 +31,10 @@ export const IncidentsTable: React.FC<IncidentsTableProps> = ({
   municipalities,
   onSelectMunicipality,
   initialCategoryFilter = 'all',
+  onOpenImportCsv,
+  onOpenAddIncident,
+  onUpdateIncidentStatus,
+  onDeleteIncident,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedMunicipality, setSelectedMunicipality] = useState<string>('all');
@@ -113,13 +124,38 @@ export const IncidentsTable: React.FC<IncidentsTableProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer self-start md:self-auto"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Exportar Tabla a Excel / CSV</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+            {onOpenAddIncident && (
+              <button
+                onClick={onOpenAddIncident}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#691C32] hover:bg-[#521325] active:scale-95 text-white text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
+                title="Registrar manualmente un incidente"
+              >
+                <PlusCircle className="w-3.5 h-3.5 text-amber-300" />
+                <span>+ Registrar Incidente</span>
+              </button>
+            )}
+
+            {onOpenImportCsv && (
+              <button
+                onClick={onOpenImportCsv}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
+                title="Cargar archivo CSV modificado en Excel"
+              >
+                <Upload className="w-3.5 h-3.5 text-emerald-200" />
+                <span>Importar / Subir CSV</span>
+              </button>
+            )}
+
+            <button
+              onClick={handleExportCSV}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 active:scale-95 text-xs font-semibold rounded-lg shadow-xs transition-all cursor-pointer"
+              title="Descargar base en formato CSV para editar en Excel"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Exportar a Excel / CSV</span>
+            </button>
+          </div>
         </div>
 
         {/* Filter Row */}
@@ -256,13 +292,35 @@ export const IncidentsTable: React.FC<IncidentsTableProps> = ({
                         {inc.ubicacion}
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          isActive 
-                            ? 'bg-red-100 text-red-800 border border-red-200' 
-                            : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        }`}>
-                          {inc.estatusOficial}
-                        </span>
+                        {onUpdateIncidentStatus ? (
+                          <div className="flex flex-col gap-1">
+                            <select
+                              value={inc.estatusCategoria}
+                              onChange={(e) => onUpdateIncidentStatus(inc.id, e.target.value as StatusCategory)}
+                              className={`text-[10px] font-bold uppercase rounded px-2 py-1 border cursor-pointer focus:outline-none transition-colors ${
+                                inc.estatusCategoria === 'vigente_activo' ? 'bg-red-50 text-red-800 border-red-300 hover:bg-red-100' :
+                                inc.estatusCategoria === 'en_seguimiento' ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100' :
+                                'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                              }`}
+                              title="Haz clic para cambiar el estatus y actualizar el semáforo al instante"
+                            >
+                              <option value="vigente_activo">🔴 ACTIVO</option>
+                              <option value="en_seguimiento">🟡 EN SEGUIMIENTO</option>
+                              <option value="atendido">🟢 ATENDIDO</option>
+                            </select>
+                            <span className="text-[10px] text-slate-500 truncate max-w-[140px]" title={inc.estatusOficial}>
+                              {inc.estatusOficial}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            isActive 
+                              ? 'bg-red-100 text-red-800 border border-red-200' 
+                              : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          }`}>
+                            {inc.estatusOficial}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-3 text-slate-700 max-w-sm leading-relaxed">
                         {inc.afectacionDetalle}
@@ -281,15 +339,31 @@ export const IncidentsTable: React.FC<IncidentsTableProps> = ({
                         {inc.ultimaVerificacion}
                       </td>
                       <td className="py-3 px-3 text-right whitespace-nowrap">
-                        <button
-                          onClick={() => {
-                            const m = municipalities.find(mun => mun.nombre === inc.municipio);
-                            if (m) onSelectMunicipality(m);
-                          }}
-                          className="px-2 py-1 rounded bg-[#691C32] hover:bg-[#501526] text-white text-[11px] font-medium cursor-pointer transition-colors"
-                        >
-                          Ver
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              const m = municipalities.find(mun => mun.nombre === inc.municipio);
+                              if (m) onSelectMunicipality(m);
+                            }}
+                            className="px-2 py-1 rounded bg-[#691C32] hover:bg-[#501526] text-white text-[11px] font-medium cursor-pointer transition-colors"
+                            title="Ver en el mapa y ficha municipal"
+                          >
+                            Ver
+                          </button>
+                          {onDeleteIncident && (
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`¿Estás seguro de eliminar el reporte de ${inc.municipio} (${inc.comunidadPunto})?`)) {
+                                  onDeleteIncident(inc.id);
+                                }
+                              }}
+                              className="p-1 text-slate-400 hover:text-red-600 rounded transition-colors cursor-pointer"
+                              title="Eliminar registro"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

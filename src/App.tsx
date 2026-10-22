@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   MunicipalitySummary, 
   Incident, 
   SemaforoLevel, 
   AffectationCategory,
+  StatusCategory,
   ExtractionChangeItem
 } from './types';
 import { INITIAL_OFFICIAL_INCIDENTS, OFFICIAL_REPORT_METADATA } from './data/officialIncidents';
@@ -17,12 +18,39 @@ import { SemaforoCriteriaModal } from './components/SemaforoCriteriaModal';
 import { ReportUploadModal } from './components/ReportUploadModal';
 import { ExecutiveReportModal } from './components/ExecutiveReportModal';
 import { DownloadProjectModal } from './components/DownloadProjectModal';
-import { FileText, X, ExternalLink, ShieldCheck } from 'lucide-react';
+import { CsvImportModal } from './components/CsvImportModal';
+import { AddIncidentModal } from './components/AddIncidentModal';
+import { FileText, X, ExternalLink, ShieldCheck, RotateCcw } from 'lucide-react';
+
+const STORAGE_INCIDENTS_KEY = 'hidalgo_meteorologico_incidents_v2';
+const STORAGE_OVERRIDES_KEY = 'hidalgo_meteorologico_overrides_v2';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<'mapa' | 'dashboard' | 'tabla'>('mapa');
-  const [incidents, setIncidents] = useState<Incident[]>(INITIAL_OFFICIAL_INCIDENTS);
-  const [userOverrides, setUserOverrides] = useState<Record<string, { semaforo: SemaforoLevel; validado: boolean; motivo: string }>>({});
+
+  // Load from localStorage or fallback to official initial data
+  const [incidents, setIncidents] = useState<Incident[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_INCIDENTS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Error al cargar incidentes guardados:", e);
+    }
+    return INITIAL_OFFICIAL_INCIDENTS;
+  });
+
+  const [userOverrides, setUserOverrides] = useState<Record<string, { semaforo: SemaforoLevel; validado: boolean; motivo: string }>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_OVERRIDES_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error("Error al cargar validaciones manuales:", e);
+    }
+    return {};
+  });
   
   // Selected municipality for detailed inspection
   const [selectedMunicipality, setSelectedMunicipality] = useState<MunicipalitySummary | null>(null);
@@ -33,9 +61,28 @@ export default function App() {
   const [isExecutiveReportOpen, setIsExecutiveReportOpen] = useState<boolean>(false);
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState<boolean>(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState<boolean>(false);
+  const [isImportCsvOpen, setIsImportCsvOpen] = useState<boolean>(false);
+  const [isAddIncidentOpen, setIsAddIncidentOpen] = useState<boolean>(false);
   
   // Initial category filter passed to IncidentsTable when clicked from Dashboard
   const [tableCategoryFilter, setTableCategoryFilter] = useState<AffectationCategory | 'all'>('all');
+
+  // Persist to localStorage on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_INCIDENTS_KEY, JSON.stringify(incidents));
+    } catch (e) {
+      console.error("Error guardando incidentes:", e);
+    }
+  }, [incidents]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_OVERRIDES_KEY, JSON.stringify(userOverrides));
+    } catch (e) {
+      console.error("Error guardando overrides:", e);
+    }
+  }, [userOverrides]);
 
   // Compute municipality summaries with semáforo calculation
   const municipalitiesSummary = useMemo(() => {
@@ -121,6 +168,72 @@ export default function App() {
     setIncidents(updatedIncidents);
   };
 
+  // Import incidents from Excel/CSV
+  const handleImportIncidents = (newIncidents: Incident[], mode: 'replace' | 'merge') => {
+    if (mode === 'replace') {
+      setIncidents(newIncidents);
+      setUserOverrides({});
+    } else {
+      const updated = [...incidents];
+      newIncidents.forEach(newInc => {
+        const idx = updated.findIndex(existing => 
+          existing.id === newInc.id ||
+          (existing.municipio.toLowerCase().trim() === newInc.municipio.toLowerCase().trim() &&
+           existing.comunidadPunto.toLowerCase().trim() === newInc.comunidadPunto.toLowerCase().trim())
+        );
+        if (idx !== -1) {
+          updated[idx] = newInc;
+        } else {
+          updated.push(newInc);
+        }
+      });
+      setIncidents(updated);
+    }
+  };
+
+  // Quick inline status toggle for an incident
+  const handleUpdateIncidentStatus = (incidentId: string, newStatus: StatusCategory) => {
+    setIncidents(prev => prev.map(inc => {
+      if (inc.id === incidentId) {
+        let estatusOficial = inc.estatusOficial;
+        if (newStatus === 'atendido') {
+          estatusOficial = 'ATENDIDO / LIBERADO';
+        } else if (newStatus === 'en_seguimiento') {
+          estatusOficial = 'EN SEGUIMIENTO / PASO PROVISIONAL';
+        } else if (newStatus === 'vigente_activo') {
+          estatusOficial = 'ACTIVO / TRÁNSITO INTERRUMPIDO';
+        }
+        return {
+          ...inc,
+          estatusCategoria: newStatus,
+          estatusOficial,
+          ultimaVerificacion: new Date().toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' h'
+        };
+      }
+      return inc;
+    }));
+  };
+
+  // Add single new incident
+  const handleAddIncident = (newInc: Incident) => {
+    setIncidents(prev => [newInc, ...prev]);
+  };
+
+  // Delete incident
+  const handleDeleteIncident = (incidentId: string) => {
+    setIncidents(prev => prev.filter(inc => inc.id !== incidentId));
+  };
+
+  // Reset to original factory initial data
+  const handleResetToOfficialInitial = () => {
+    if (window.confirm("¿Deseas restablecer todos los datos al Concentrado Oficial del 20 de Octubre? Se perderán las modificaciones no guardadas.")) {
+      setIncidents(INITIAL_OFFICIAL_INCIDENTS);
+      setUserOverrides({});
+      localStorage.removeItem(STORAGE_INCIDENTS_KEY);
+      localStorage.removeItem(STORAGE_OVERRIDES_KEY);
+    }
+  };
+
   const handleFilterByCategoryFromDashboard = (cat: AffectationCategory | 'all') => {
     setTableCategoryFilter(cat);
     setCurrentTab('tabla');
@@ -137,6 +250,7 @@ export default function App() {
         onOpenExecutiveReport={() => setIsExecutiveReportOpen(true)}
         onOpenPdfOriginal={() => setIsPdfViewerOpen(true)}
         onOpenDownload={() => setIsDownloadOpen(true)}
+        onOpenImportCsv={() => setIsImportCsvOpen(true)}
         totalActivos={totalActivos}
         totalAtendidos={totalAtendidos}
       />
@@ -169,6 +283,10 @@ export default function App() {
             municipalities={municipalitiesSummary}
             onSelectMunicipality={(mun) => setSelectedMunicipality(mun)}
             initialCategoryFilter={tableCategoryFilter}
+            onOpenImportCsv={() => setIsImportCsvOpen(true)}
+            onOpenAddIncident={() => setIsAddIncidentOpen(true)}
+            onUpdateIncidentStatus={handleUpdateIncidentStatus}
+            onDeleteIncident={handleDeleteIncident}
           />
         )}
       </main>
@@ -186,6 +304,13 @@ export default function App() {
             <span>84 Municipios Monitoreados</span>
             <span>•</span>
             <button 
+              onClick={() => setIsImportCsvOpen(true)}
+              className="text-emerald-400 hover:text-emerald-300 font-semibold underline cursor-pointer"
+            >
+              Actualizar CSV
+            </button>
+            <span>•</span>
+            <button 
               onClick={() => setIsPdfViewerOpen(true)}
               className="hover:text-amber-300 underline cursor-pointer"
             >
@@ -194,9 +319,18 @@ export default function App() {
             <span>•</span>
             <button 
               onClick={() => setIsDownloadOpen(true)}
-              className="text-emerald-400 hover:text-emerald-300 font-semibold underline cursor-pointer inline-flex items-center gap-1"
+              className="text-amber-300 hover:text-amber-200 underline cursor-pointer"
             >
-              Descargar Código (.ZIP)
+              Descargar Código
+            </button>
+            <span>•</span>
+            <button 
+              onClick={handleResetToOfficialInitial}
+              className="text-slate-500 hover:text-rose-400 underline cursor-pointer inline-flex items-center gap-1"
+              title="Restablecer la base de datos al corte oficial inicial"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Restablecer datos</span>
             </button>
           </div>
         </div>
@@ -240,6 +374,22 @@ export default function App() {
         municipalities={municipalitiesSummary}
         onOpenPdfOriginal={() => setIsPdfViewerOpen(true)}
         onOpenExecutiveReport={() => setIsExecutiveReportOpen(true)}
+      />
+
+      {/* CSV / Excel Import Modal */}
+      <CsvImportModal
+        isOpen={isImportCsvOpen}
+        onClose={() => setIsImportCsvOpen(false)}
+        currentIncidents={incidents}
+        onImportIncidents={handleImportIncidents}
+      />
+
+      {/* Manual Quick Add Incident Modal */}
+      <AddIncidentModal
+        isOpen={isAddIncidentOpen}
+        onClose={() => setIsAddIncidentOpen(false)}
+        municipalities={municipalitiesSummary}
+        onAddIncident={handleAddIncident}
       />
 
       {/* Official PDF Document Viewer Modal */}

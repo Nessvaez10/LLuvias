@@ -10,7 +10,8 @@ import {
   Printer, 
   ExternalLink,
   Clock,
-  Download
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -21,6 +22,7 @@ interface HeaderProps {
   onOpenExecutiveReport: () => void;
   onOpenPdfOriginal: () => void;
   onOpenDownload: () => void;
+  onOpenImportCsv: () => void;
   totalActivos: number;
   totalAtendidos: number;
 }
@@ -33,6 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenExecutiveReport,
   onOpenPdfOriginal,
   onOpenDownload,
+  onOpenImportCsv,
   totalActivos,
   totalAtendidos,
 }) => {
@@ -95,11 +98,20 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Global Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={onOpenImportCsv}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 active:scale-95 text-xs font-semibold rounded-md border border-emerald-400/50 transition-all text-white cursor-pointer shadow-md"
+            title="Actualizar la base de datos subiendo un archivo CSV / Excel editado"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-200" />
+            <span>Actualizar Excel/CSV</span>
+          </button>
+
+          <button
             onClick={onOpenDownload}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-600 hover:to-emerald-700 active:scale-95 text-xs font-semibold rounded-md border border-emerald-400/50 transition-all text-white cursor-pointer shadow-md"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-semibold rounded-md border border-slate-600 transition-all text-white cursor-pointer shadow-sm"
             title="Descargar código fuente (.zip) y datos del proyecto"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-200" />
+            <Download className="w-3.5 h-3.5 text-amber-300" />
             <span>Descargar Proyecto</span>
           </button>
 
