@@ -16,6 +16,7 @@ import { MunicipalityDetailModal } from './components/MunicipalityDetailModal';
 import { SemaforoCriteriaModal } from './components/SemaforoCriteriaModal';
 import { ReportUploadModal } from './components/ReportUploadModal';
 import { ExecutiveReportModal } from './components/ExecutiveReportModal';
+import { DownloadProjectModal } from './components/DownloadProjectModal';
 import { FileText, X, ExternalLink, ShieldCheck } from 'lucide-react';
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
   const [isExecutiveReportOpen, setIsExecutiveReportOpen] = useState<boolean>(false);
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState<boolean>(false);
+  const [isDownloadOpen, setIsDownloadOpen] = useState<boolean>(false);
   
   // Initial category filter passed to IncidentsTable when clicked from Dashboard
   const [tableCategoryFilter, setTableCategoryFilter] = useState<AffectationCategory | 'all'>('all');
@@ -134,6 +136,7 @@ export default function App() {
         onOpenCriteria={() => setIsCriteriaOpen(true)}
         onOpenExecutiveReport={() => setIsExecutiveReportOpen(true)}
         onOpenPdfOriginal={() => setIsPdfViewerOpen(true)}
+        onOpenDownload={() => setIsDownloadOpen(true)}
         totalActivos={totalActivos}
         totalAtendidos={totalAtendidos}
       />
@@ -179,16 +182,21 @@ export default function App() {
               <strong>Gobierno del Estado de Hidalgo</strong> • Subsecretaría de Protección Civil y Gestión de Riesgos
             </span>
           </div>
-          <div className="flex items-center gap-4 text-[11px] text-slate-500">
-            <span>Sistema SIG de Monitoreo Hidrometeorológico</span>
-            <span>•</span>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 text-[11px] text-slate-500">
             <span>84 Municipios Monitoreados</span>
             <span>•</span>
             <button 
               onClick={() => setIsPdfViewerOpen(true)}
               className="hover:text-amber-300 underline cursor-pointer"
             >
-              Consultar PDF Fuente (26 Páginas)
+              PDF Fuente (26 Págs)
+            </button>
+            <span>•</span>
+            <button 
+              onClick={() => setIsDownloadOpen(true)}
+              className="text-emerald-400 hover:text-emerald-300 font-semibold underline cursor-pointer inline-flex items-center gap-1"
+            >
+              Descargar Código (.ZIP)
             </button>
           </div>
         </div>
@@ -222,6 +230,16 @@ export default function App() {
         municipalities={municipalitiesSummary}
         incidents={incidents}
         reportMetadata={OFFICIAL_REPORT_METADATA}
+      />
+
+      {/* Download Project & Resources Modal */}
+      <DownloadProjectModal
+        isOpen={isDownloadOpen}
+        onClose={() => setIsDownloadOpen(false)}
+        incidents={incidents}
+        municipalities={municipalitiesSummary}
+        onOpenPdfOriginal={() => setIsPdfViewerOpen(true)}
+        onOpenExecutiveReport={() => setIsExecutiveReportOpen(true)}
       />
 
       {/* Official PDF Document Viewer Modal */}

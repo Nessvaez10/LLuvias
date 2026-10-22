@@ -9,7 +9,8 @@ import {
   Table2, 
   Printer, 
   ExternalLink,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -19,6 +20,7 @@ interface HeaderProps {
   onOpenCriteria: () => void;
   onOpenExecutiveReport: () => void;
   onOpenPdfOriginal: () => void;
+  onOpenDownload: () => void;
   totalActivos: number;
   totalAtendidos: number;
 }
@@ -30,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCriteria,
   onOpenExecutiveReport,
   onOpenPdfOriginal,
+  onOpenDownload,
   totalActivos,
   totalAtendidos,
 }) => {
@@ -91,6 +94,15 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Global Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={onOpenDownload}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-600 hover:to-emerald-700 active:scale-95 text-xs font-semibold rounded-md border border-emerald-400/50 transition-all text-white cursor-pointer shadow-md"
+            title="Descargar código fuente (.zip) y datos del proyecto"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-200" />
+            <span>Descargar Proyecto</span>
+          </button>
+
           <button
             onClick={onOpenCriteria}
             className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 active:scale-95 text-xs font-medium rounded-md border border-white/20 transition-all text-white cursor-pointer shadow-sm"
