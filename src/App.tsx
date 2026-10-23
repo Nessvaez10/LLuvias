@@ -297,7 +297,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#BC955B]"></span>
             <span>
-              <strong>Gobierno del Estado de Hidalgo</strong> • Subsecretaría de Protección Civil y Gestión de Riesgos
+              <strong>Gobierno del Estado de Hidalgo</strong> • Secretaría de Gobierno
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 text-[11px] text-slate-500">
@@ -306,25 +306,10 @@ export default function App() {
             <button 
               onClick={() => setIsImportCsvOpen(true)}
               className="text-emerald-400 hover:text-emerald-300 font-semibold underline cursor-pointer"
-            >
-              Actualizar CSV
-            </button>
-            <span>•</span>
-            <button 
-              onClick={() => setIsPdfViewerOpen(true)}
-              className="hover:text-amber-300 underline cursor-pointer"
-            >
-              PDF Fuente (26 Págs)
-            </button>
-            <span>•</span>
-            <button 
-              onClick={() => setIsDownloadOpen(true)}
-              className="text-amber-300 hover:text-amber-200 underline cursor-pointer"
-            >
-              Descargar Código
-            </button>
-            <span>•</span>
-            <button 
+           
+
+
+              
               onClick={handleResetToOfficialInitial}
               className="text-slate-500 hover:text-rose-400 underline cursor-pointer inline-flex items-center gap-1"
               title="Restablecer la base de datos al corte oficial inicial"

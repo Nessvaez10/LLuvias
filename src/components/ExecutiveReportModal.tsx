@@ -90,7 +90,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                 Gobierno del Estado de Hidalgo
               </div>
               <div className="text-xs font-sans font-bold uppercase tracking-wider text-[#691C32]">
-                Subsecretaría de Protección Civil y Gestión de Riesgos
+                Secretaría de Gobierno
               </div>
               <h1 className="text-xl sm:text-2xl font-bold font-serif text-slate-900 mt-1">
                 Boletín Ejecutivo de Situación Hidrometeorológica
@@ -202,8 +202,8 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
           <div className="pt-8 border-t border-slate-300 font-sans text-xs grid grid-cols-2 gap-8 text-center mt-6">
             <div>
               <div className="border-b border-slate-400 w-48 mx-auto mb-1"></div>
-              <strong className="block text-slate-800">Mesa de Situación Operativa</strong>
-              <span className="text-[10px] text-slate-500">Subsecretaría de Protección Civil y Gestión de Riesgos</span>
+              <strong className="block text-slate-800">Guillermo Olivares Reyna</strong>
+              <span className="text-[10px] text-slate-500">Secretaría de Gobierno</span>
             </div>
             <div>
               <div className="border-b border-slate-400 w-48 mx-auto mb-1"></div>

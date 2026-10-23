@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
                 Gobierno del Estado de Hidalgo
               </span>
               <span className="text-[10px] sm:text-xs text-rose-300 hidden md:inline">
-                Subsecretaría de Protección Civil y Gestión de Riesgos
+                Secretaría de Gobierno
               </span>
             </div>
             <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-white leading-tight font-serif mt-0.5">
@@ -106,14 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Actualizar Excel/CSV</span>
           </button>
 
-          <button
-            onClick={onOpenDownload}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-semibold rounded-md border border-slate-600 transition-all text-white cursor-pointer shadow-sm"
-            title="Descargar código fuente (.zip) y datos del proyecto"
-          >
-            <Download className="w-3.5 h-3.5 text-amber-300" />
-            <span>Descargar Proyecto</span>
-          </button>
+       
 
           <button
             onClick={onOpenCriteria}
